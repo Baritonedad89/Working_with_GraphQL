@@ -1,7 +1,7 @@
 import React, { Component } from "react";
-import { graphql } from "react-apollo";
+import { graphql, compose } from "react-apollo";
 // import the query
-import { getAuthorsQuery } from "../queries/queries";
+import { getAuthorsQuery, addBookMutation, getBooksQuery,  } from "../queries/queries";
 
 class AddBook extends Component {
 
@@ -12,7 +12,7 @@ class AddBook extends Component {
   };
 
   displayAuthors() {
-    const data = this.props.data;
+    const data = this.props.getAuthorsQuery;
     if (data.loading) {
       return <option disabled>Loading Authors...</option>;
     } else {
@@ -28,8 +28,22 @@ class AddBook extends Component {
 
   submitForm = e => {
     e.preventDefault();
-    console.log(this.state);
+
+    const {name, genre, authorId } = this.state;
+
+this.props.addBookMutation({
+  variables: {
+    name,
+    genre,
+    authorId,
+  }, 
+  // fetch the queries to rerender the UI
+  refetchQueries: [{query: getBooksQuery}]
+})
+
+
   }
+
   render() {
     return (
       <form id="add-book" onSubmit={this.submitForm}>
@@ -60,4 +74,8 @@ class AddBook extends Component {
   }
 }
 
-export default graphql(getAuthorsQuery)(AddBook);
+// use compose to bind more than 1 mutations/queries to a component 
+export default compose(
+  graphql(getAuthorsQuery, {name: "getAuthorsQuery"}),
+  graphql(addBookMutation, {name: "addBookMutation"})
+)(AddBook);
